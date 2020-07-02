@@ -9,8 +9,7 @@ let activeNote = {};
 
 // A function for getting all notes from the db
 const getNotes = () => {
-  console.log('init');
-  
+ 
   return $.ajax({
     url: "/api/notes",
     method: "GET",
@@ -24,14 +23,13 @@ const saveNote = (note) => {
     data: note,
     method: "POST",
   });
-  
+
 };
 
 // A function for deleting a note from the db
 const deleteNote = (id) => {
-  console.log(this)
   return $.ajax({
-    url: "/api/notes/" + id,
+    url: "/api/notes/:" + id,
     method: "DELETE",
   });
 };
@@ -72,15 +70,16 @@ const handleNoteDelete = function (event) {
   event.stopPropagation();
 
   const note = $(this).parent(".list-group-item").data();
-console.log(note);
-activeNote = $(this).parent(".list-group-item").data();
+  activeNote = $(this).parent(".list-group-item").data();
   if (activeNote.id === note.id) {
     activeNote = {};
   }
-console.log("ID's:" + note.id + activeNote.id);
+console.log("steel Heere");
+
 
   deleteNote(note.id).then(() => {
     getAndRenderNotes();
+    getNotes();
     renderActiveNote();
   });
 };
@@ -88,8 +87,6 @@ console.log("ID's:" + note.id + activeNote.id);
 // Sets the activeNote and displays it
 const handleNoteView = function () {
   activeNote = $(this).data();
-  console.log("actnoteid" + activeNote.id);
-  
   renderActiveNote();
 };
 

@@ -2,12 +2,18 @@ var express = require("express");
 var path = require("path")
 var fs = require("fs");
 var app = express();
-var PORT = process.env.PORT || 3000;
+var PORT = process.env.PORT || 3100;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(express.static('public'));
+
+const logger = (req, res, next) => {
+    console.log("START");
+    next();
+}
+app.use(logger)
 
 // Routes
 app.get("/notes", function (req, res) {
@@ -26,18 +32,21 @@ app.post("/api/notes", function (req, res) {
     fs.readFile("db/db.json", "utf8", function (err, data) {
         if (err) throw (err);
         var notes = data // STRING
-        noteJSON = JSON.parse(notes); // array of objects (?)  
+        if (notes.length > 0) {
+            noteJSON = JSON.parse(notes); // array of objects (?)     
+        } else {
+            noteJSON = []
+        }
 
-        //REcieve note
+
+        //Recieve note
         newNote = req.body // OBJECT
         // console.log("new note:" + newNote + typeof(newNote)); 
         noteJSON.push(newNote) // OBJECT
+        i = 1
         noteJSON.forEach(newNote => {
-            i = 0
             newNote.id = i;
-            console.log((newNote.id));
             i++;
-            
         });
         noteStr = JSON.stringify(noteJSON) // STRING
 
@@ -46,22 +55,39 @@ app.post("/api/notes", function (req, res) {
             if (err) throw (err)
         })
     })
-    console.log("Note SAved!");
-
 });
 
 //Delete 
-app.post("/api/notes/:id", function (req, res) {
-    notes.splice(this.data)
-    console.log(this.data);
+app.delete("/api/notes/::id", function (req, res) {
 
-    fs.writeFile("db/db.json", ("[" + notes + "]"), function (err) {
-        if (err) throw (err)
+    id = parseInt(req.params.id)
+
+    fs.readFile("db/db.json", "utf8", function (err, data) {
+        if (err) throw (err);
+
+        var notes = data // STRING
+        noteJSON = JSON.parse(notes); // array of objects (?)  
+
+
+        const found = noteJSON.some(note => note.id === id)
+
+        if (found) {
+            noteJSO = noteJSON.filter(note => note.id !== id);
+            noteStr = JSON.stringify(noteJSO);
+
+            // add to db.json
+            fs.writeFile("db/db.json", (noteStr), function (err) {
+                if (err) throw (err)
+            })
+
+
+        } else {
+            res.status(400).json({ msg: `Member #${req.params.id} not found` })
+        }
     })
+});
 
-})
-
-// Start our server
+// Init server
 app.listen(PORT, function () {
     console.log("App listening on PORT " + PORT);
 });
