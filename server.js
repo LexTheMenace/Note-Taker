@@ -3,14 +3,17 @@ var path = require("path")
 var fs = require("fs");
 var app = express();
 var PORT = process.env.PORT || 3100;
-
+//Body Parse
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+//Display Static Files
 app.use(express.static('public'));
 
+//Log FUll URL Hit
 const logger = (req, res, next) => {
-    console.log("START");
+    var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+console.log(fullUrl);
     next();
 }
 app.use(logger)
@@ -28,8 +31,7 @@ app.get("/api/notes", function (req, res) {
 
 //Post
 app.post("/api/notes", function (req, res) {
-
-    fs.readFile("db/db.json", "utf8", function (err, data) {
+   fs.readFile("db/db.json", "utf8", function (err, data) {
         if (err) throw (err);
         var notes = data // STRING
         if (notes.length > 0) {
@@ -37,7 +39,6 @@ app.post("/api/notes", function (req, res) {
         } else {
             noteJSON = []
         }
-
 
         //Recieve note
         newNote = req.body // OBJECT
@@ -55,12 +56,15 @@ app.post("/api/notes", function (req, res) {
             if (err) throw (err)
         })
     })
+    res.redirect("/notes")
 });
 
 //Delete 
-app.delete("/api/notes/::id", function (req, res) {
-
+app.delete("/api/notes/:id", function (req, res) {
     id = parseInt(req.params.id)
+    console.log(id);
+    var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+console.log(fullUrl);
 
     fs.readFile("db/db.json", "utf8", function (err, data) {
         if (err) throw (err);
@@ -68,23 +72,20 @@ app.delete("/api/notes/::id", function (req, res) {
         var notes = data // STRING
         noteJSON = JSON.parse(notes); // array of objects (?)  
 
-
         const found = noteJSON.some(note => note.id === id)
 
         if (found) {
             noteJSO = noteJSON.filter(note => note.id !== id);
             noteStr = JSON.stringify(noteJSO);
-
+            
             // add to db.json
-            fs.writeFile("db/db.json", (noteStr), function (err) {
+            fs.writeFile("db/db.json", noteStr, function (err) {
                 if (err) throw (err)
-            })
-
-
-        } else {
-            res.status(400).json({ msg: `Member #${req.params.id} not found` })
-        }
-    })
+                console.log("sucess");
+                
+            })        
+        }}) 
+        res.send("/notes");
 });
 
 // Init server
